@@ -70,32 +70,38 @@ class Order(Product):
     def total_price(self) -> int:
         return sum(item.total_price() for item in self.items)
 
-    @property
-    def user_name(self) -> str:
-        return self.user.name
-
 
 @dataclass(frozen=True)
 class OrderLogging:
     def orders_list(self, order: Order) -> None:
-        print(f"Username: {order.user_name}", end="\n")
+        print(f"Username: {order.user.name}", end="\n")
         print("| No\t| Item | Quantity\t| Price\t| Total\t|")
         for i, item in enumerate(order.items):
             print(f"| {i}\t| {item.label} | {item.quantity}\t\t| {item.price}\t| {item.total_price()}\t|")
 
-    def checkout_log(self, order: Order):
+    def checkout_log(self, order: Order, payment_status: PaymentStatus):
         print(
             "",
             f"Total: {order.total_price()}",
-            f"Payment Status: {order._payment_status}",
+            f"Payment Status: {payment_status}",
             sep="\n"
         )
 
 
+class PaymentProcessor(ABC):
+    @abstractmethod
+    def get_payment_status(self, order: Order) -> PaymentStatus:
+        """get payment status of an order"""
+
+    @abstractmethod
+    def set_payment_status(self, order: Order) -> PaymentStatus:
+        """set payment status of an order"""
+
+
 @dataclass(frozen=True)
-class OrderPaymentProcessor:
-    # def get_payment_status(self, order: Order) -> PaymentStatus:
-    #     return order._payment_status
+class OrderPaymentProcessor(PaymentProcessor):
+    def get_payment_status(self, order: Order) -> PaymentStatus:
+        return order._payment_status
 
     def set_payment_status(self, order: Order, status: PaymentStatus) -> None:
         if order._payment_status == PaymentStatus.PAID:
@@ -118,7 +124,7 @@ def main() -> None:
     
     order_logging = OrderLogging()
     order_logging.orders_list(order)
-    order_logging.checkout_log(order)
+    order_logging.checkout_log(order, payment_processor.get_payment_status(order))
 
 
 
