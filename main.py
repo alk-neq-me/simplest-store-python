@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from abc import ABC, abstractmethod
 from enum import Enum, auto
@@ -68,31 +70,37 @@ class Order(Product):
     def total_price(self) -> int:
         return sum(item.total_price() for item in self.items)
 
-    def log(self) -> None:
-        print(f"Username: {self.user_name}", end="\n")
-        print("| No\t| Item | Quantity\t| Price\t| Total\t|")
-        for i, item in enumerate(self.items):
-            print(f"| {i}\t| {item.label} | {item.quantity}\t\t| {item.price}\t| {item.total_price()}\t|")
-
-        print(
-            "",
-            f"Total: {self.total_price()}",
-            f"Payment Status: {self.get_payment_status()}",
-            sep="\n"
-        )
-
     @property
     def user_name(self) -> str:
         return self.user.name
 
-    def get_payment_status(self) -> PaymentStatus:
-        return self._payment_status
 
-    def set_payment_status(self, status: PaymentStatus) -> None:
-        if self._payment_status == PaymentStatus.PAID:
+@dataclass(frozen=True)
+class OrderLogging:
+    def orders_list(self, order: Order) -> None:
+        print(f"Username: {order.user_name}", end="\n")
+        print("| No\t| Item | Quantity\t| Price\t| Total\t|")
+        for i, item in enumerate(order.items):
+            print(f"| {i}\t| {item.label} | {item.quantity}\t\t| {item.price}\t| {item.total_price()}\t|")
+
+    def checkout_log(self, order: Order, payment_processor: OrderPaymentProcessor):
+        print(
+            "",
+            f"Total: {order.total_price()}",
+            f"Payment Status: {payment_processor.get_payment_status(order)}",
+            sep="\n"
+        )
+
+
+@dataclass(frozen=True)
+class OrderPaymentProcessor:
+    def get_payment_status(self, order: Order) -> PaymentStatus:
+        return order._payment_status
+
+    def set_payment_status(self, order: Order, status: PaymentStatus) -> None:
+        if order._payment_status == PaymentStatus.PAID:
             raise FailedPayment("U can't change the status of an already paid order.")
-        self._payment_status = status
-
+        order._payment_status = status
 
 
 
@@ -104,9 +112,13 @@ def main() -> None:
     cherry = Item(label="Cherry", quantity=2, price=1_500)
 
     order = Order(user=me, items=[apple, cherry])
-    order.set_payment_status(PaymentStatus.PAID)
+
+    payment_processor = OrderPaymentProcessor()
+    payment_processor.set_payment_status(order, PaymentStatus.PAID)
     
-    order.log()
+    order_logging = OrderLogging()
+    order_logging.orders_list(order)
+    order_logging.checkout_log(order, payment_processor)
 
 
 
