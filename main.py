@@ -83,19 +83,19 @@ class OrderLogging:
         for i, item in enumerate(order.items):
             print(f"| {i}\t| {item.label} | {item.quantity}\t\t| {item.price}\t| {item.total_price()}\t|")
 
-    def checkout_log(self, order: Order, payment_processor: OrderPaymentProcessor):
+    def checkout_log(self, order: Order):
         print(
             "",
             f"Total: {order.total_price()}",
-            f"Payment Status: {payment_processor.get_payment_status(order)}",
+            f"Payment Status: {order._payment_status}",
             sep="\n"
         )
 
 
 @dataclass(frozen=True)
 class OrderPaymentProcessor:
-    def get_payment_status(self, order: Order) -> PaymentStatus:
-        return order._payment_status
+    # def get_payment_status(self, order: Order) -> PaymentStatus:
+    #     return order._payment_status
 
     def set_payment_status(self, order: Order, status: PaymentStatus) -> None:
         if order._payment_status == PaymentStatus.PAID:
@@ -118,7 +118,7 @@ def main() -> None:
     
     order_logging = OrderLogging()
     order_logging.orders_list(order)
-    order_logging.checkout_log(order, payment_processor)
+    order_logging.checkout_log(order)
 
 
 
