@@ -9,3 +9,4 @@
 - Enum 
 - Type hint
 - Dataclass 
+- provided by S.O.L.I.D principal
