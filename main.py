@@ -65,7 +65,7 @@ class Item(Product):
 class Order(Product):
     user: User
     items: List[Item] = field(default_factory=list)
-    _payment_status: PaymentStatus = field(default=PaymentStatus.PENDING)
+    payment_status: PaymentStatus = field(default=PaymentStatus.PENDING)
 
     def total_price(self) -> int:
         return sum(item.total_price() for item in self.items)
@@ -101,12 +101,12 @@ class PaymentProcessor(ABC):
 @dataclass(frozen=True)
 class OrderPaymentProcessor(PaymentProcessor):
     def get_payment_status(self, order: Order) -> PaymentStatus:
-        return order._payment_status
+        return order.payment_status
 
     def set_payment_status(self, order: Order, status: PaymentStatus) -> None:
-        if order._payment_status == PaymentStatus.PAID:
+        if order.payment_status == PaymentStatus.PAID:
             raise FailedPayment("U can't change the status of an already paid order.")
-        order._payment_status = status
+        order.payment_status = status
 
 
 
